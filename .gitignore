@@ -1,3 +1,6 @@
-# Données lourdes GPS / GTFS
-Data/Raw
-Data/Raw/GTFS/IDFM-gtfs
+.venv/
+.env
+__pycache__/
+*.pyc
+data/raw/realtime/*.xml
+data/raw/gtfs/*.txt

@@ -1,50 +1,96 @@
 import os
-import sys
-import requests
+import json
+from pathlib import Path
 from datetime import datetime
 
-# Récupération du token depuis la variable d'environnement.
-# Remplacez par votre token directement ici si vous souhaitez le coder en dur.
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
 TOKEN = os.getenv("IDFM_API_TOKEN")
 if not TOKEN:
-    # Pour développement local / debug, ajoutez le token ici (non recommandé en production).
-    TOKEN = "votre_token_ici"
+    raise RuntimeError("IDFM_API_TOKEN introuvable dans le fichier .env")
 
-if not TOKEN or TOKEN == "votre_token_ici":
-    raise RuntimeError(
-        "IDFM_API_TOKEN introuvable. Définissez la variable d'environnement IDFM_API_TOKEN "
-        "ou mettez votre token directement dans le script."
-    )
+BASE_URL = "https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring"
 
-# URL PRIM unitaire
-url = "https://api.idfmobilites.fr/coverage/sncf:OCE/vehicle_positions"  # Exemple: remplacer par votre endpoint
-params = {
-    # Exemple de paramètre reporté depuis PRIM
-    # "filter[stop]": "stop_id",
-    # "datetime": "YYYY-MM-DDTHH:MM:SSZ",
-}
+# Quelques MonitoringRef plausibles à tester
+MONITORING_REFS = [
+    "STIF:StopPoint:Q:463158:",   # exemple PRIM
+    "STIF:StopArea:SP:71517:",    # exemple public
+    "STIF:StopPoint:Q:41442:",    # exemple public
+    "STIF:StopArea:SP:43032:",    # exemple public
+    "STIF:StopPoint:Q:36384:",    # exemple public
+]
 
 headers = {
-    "apikey": TOKEN,
-    # "Authorization": f"Bearer {TOKEN}"  # si l'API attend un Bearer token
-    "Accept": "application/xml",
+    "apiKey": TOKEN,
+    "Accept": "application/json",
 }
 
-try:
-    response = requests.get(url, params=params, headers=headers, timeout=30)
-    response.raise_for_status()
-except requests.RequestException as exc:
-    print("Erreur lors de l'appel API :", exc, file=sys.stderr)
-    sys.exit(1)
+raw_dir = Path("data") / "raw" / "realtime"
+raw_dir.mkdir(parents=True, exist_ok=True)
 
-raw_dir = os.path.join("data", "raw", "realtime")
-os.makedirs(raw_dir, exist_ok=True)
-filename = os.path.join(
-    raw_dir,
-    f"stop_snapshot_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.xml",
-)
+results = []
 
-with open(filename, "w", encoding="utf-8") as f:
-    f.write(response.text)
+for monitoring_ref in MONITORING_REFS:
+    try:
+        response = requests.get(
+            BASE_URL,
+            params={"MonitoringRef": monitoring_ref},
+            headers=headers,
+            timeout=30,
+        )
 
-print("OK", filename)
+        status_code = response.status_code
+
+        try:
+            payload = response.json()
+        except Exception:
+            payload = None
+
+        visits = []
+        if payload:
+            visits = (
+                payload.get("Siri", {})
+                .get("ServiceDelivery", {})
+                .get("StopMonitoringDelivery", [{}])[0]
+                .get("MonitoredStopVisit", [])
+            )
+
+        result = {
+            "monitoring_ref": monitoring_ref,
+            "status_code": status_code,
+            "nb_passages": len(visits),
+            "ok": status_code == 200 and len(visits) > 0,
+        }
+        results.append(result)
+
+        print(
+            f"{monitoring_ref} -> status={status_code}, passages={len(visits)}"
+        )
+
+        # Sauvegarde seulement les réponses utiles
+        if status_code == 200 and payload is not None:
+            filename = raw_dir / (
+                f"snapshot_{monitoring_ref.replace(':', '_')}_"
+                f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+            )
+            with open(filename, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    except requests.RequestException as exc:
+        print(f"{monitoring_ref} -> erreur : {exc}")
+        results.append(
+            {
+                "monitoring_ref": monitoring_ref,
+                "status_code": None,
+                "nb_passages": 0,
+                "ok": False,
+                "error": str(exc),
+            }
+        )
+
+print("\nRésumé :")
+for r in results:
+    print(r)
