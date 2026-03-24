@@ -2,5 +2,14 @@
 .env
 __pycache__/
 *.pyc
-data/raw/realtime/*.xml
-data/raw/gtfs/*.txt
+.DS_Store
+
+data/raw/
+data/processed/
+data/analytics/
+
+*.zip
+*.parquet
+*.csv
+*.json
+*.xml
