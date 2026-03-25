@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-RAW_DIR = Path("data/raw/gtfs/IDFM")
+RAW_DIR = Path("data/raw/gtfs/IDFM-gtfs")
 PROCESSED_DIR = Path("data/processed/gtfs")
 
 PROCESSED_DIR.mkdir(parents=True, exist_ok=True)

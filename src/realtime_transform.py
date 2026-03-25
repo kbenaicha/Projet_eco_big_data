@@ -57,8 +57,8 @@ df = pd.DataFrame(records)
 if df.empty:
     print("Aucun passage exploitable trouvé.")
 else:
-    output_csv = PROCESSED_DIR / "realtime_passages.csv"
-    output_parquet = PROCESSED_DIR / "realtime_passages.parquet"
+    output_csv = PROCESSED_DIR / "realtime/realtime_passages.csv"
+    output_parquet = PROCESSED_DIR / "realtime/realtime_passages.parquet"
 
     df.to_csv(output_csv, index=False)
     df.to_parquet(output_parquet, index=False)
