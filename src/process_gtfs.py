@@ -1,9 +1,14 @@
 from pathlib import Path
 import pandas as pd
 
+<<<<<<< HEAD:scripts/process_gtfs.py
 BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DIR = BASE_DIR / "data" / "raw" / "gtfs" / "IDFM-gtfs"
 PROCESSED_DIR = BASE_DIR / "data" / "processed" / "gtfs"
+=======
+RAW_DIR = Path("data/raw/gtfs/IDFM-gtfs")
+PROCESSED_DIR = Path("data/processed/gtfs")
+>>>>>>> d1e78102d98305673213b941e2672765a524ff9a:src/process_gtfs.py
 
 PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
