@@ -3,7 +3,7 @@
 __pycache__/
 *.pyc
 .DS_Store
-venv/ 
+
 
 data/raw/
 data/processed/
@@ -14,4 +14,8 @@ data/analytics/
 *.csv
 *.json
 *.xml
+<<<<<<< HEAD
 .gitattributes
+=======
+.gitattributes
+>>>>>>> 712a8200b4e8a152ba7c2884423ec6482fe5cae9
