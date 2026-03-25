@@ -13,3 +13,4 @@ data/analytics/
 *.csv
 *.json
 *.xml
+.gitattributes
