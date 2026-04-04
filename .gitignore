@@ -1,21 +1,21 @@
 .venv/
 .env
-__pycache__/
-*.pyc
-.DS_Store
 
+__pycache__/
+*.py[cod]
+
+.DS_Store
+.vscode/
+.idea/
+
+build/
+dist/
+*.egg-info/
+*.log
 
 data/raw/
 data/processed/
+data/final/
 data/analytics/
 
-*.zip
-*.parquet
-*.csv
-*.json
-*.xml
-<<<<<<< HEAD
-.gitattributes
-=======
-.gitattributes
->>>>>>> 712a8200b4e8a152ba7c2884423ec6482fe5cae9
+!oozie/**/*.xml

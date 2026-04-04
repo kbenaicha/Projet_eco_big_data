@@ -1,0 +1,198 @@
+<workflow-app name="hybrid-transport-monitoring" xmlns="uri:oozie:workflow:0.5">
+  <start to="should_upload_raw"/>
+
+  <decision name="should_upload_raw">
+    <switch>
+      <case to="upload_raw">${wf:conf("uploadRawFirst") eq "true"}</case>
+      <default to="prepare_gtfs"/>
+    </switch>
+  </decision>
+
+  <action name="upload_raw">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <exec>bash</exec>
+      <argument>project/scripts/upload_raw_to_hdfs_cluster.sh</argument>
+      <env-var>PATH=/usr/hdp/current/spark2-client/bin:/usr/hdp/3.1.0.0-78/spark2/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/3.1.0.0-78/hadoop/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/3.1.0.0-78/hive/bin:/usr/bin:/bin</env-var>
+      <env-var>GROUP=${group}</env-var>
+      <env-var>USER=${user_name}</env-var>
+      <env-var>LOCAL_RAW_DIR=data/raw</env-var>
+      <env-var>HDFS_BASE_DIR=${hdfsBaseDir}/raw</env-var>
+      <archive>${projectArchive}</archive>
+    </shell>
+    <ok to="prepare_gtfs"/>
+    <error to="kill"/>
+  </action>
+
+  <action name="prepare_gtfs">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <exec>bash</exec>
+      <argument>project/scripts/run_spark_step_hdfs.sh</argument>
+      <argument>src/prepare_gtfs.py</argument>
+      <env-var>PATH=/usr/hdp/current/spark2-client/bin:/usr/hdp/3.1.0.0-78/spark2/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/3.1.0.0-78/hadoop/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/3.1.0.0-78/hive/bin:/usr/bin:/bin</env-var>
+      <env-var>GROUP=${group}</env-var>
+      <env-var>USER=${user_name}</env-var>
+      <env-var>HDFS_BASE_DIR=${hdfsBaseDir}</env-var>
+      <env-var>SPARK_HOME=/usr/hdp/3.1.0.0-78/spark2</env-var>
+      <env-var>SPARK_SUBMIT_CMD=${sparkSubmitCmd}</env-var>
+      <env-var>PYSPARK_PYTHON=${pysparkPython}</env-var>
+      <env-var>PYSPARK_DRIVER_PYTHON=${pysparkDriverPython}</env-var>
+      <archive>${projectArchive}</archive>
+    </shell>
+    <ok to="prepare_realtime"/>
+    <error to="kill"/>
+  </action>
+
+  <action name="prepare_realtime">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <exec>bash</exec>
+      <argument>project/scripts/run_spark_step_hdfs.sh</argument>
+      <argument>src/prepare_realtime.py</argument>
+      <env-var>PATH=/usr/hdp/current/spark2-client/bin:/usr/hdp/3.1.0.0-78/spark2/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/3.1.0.0-78/hadoop/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/3.1.0.0-78/hive/bin:/usr/bin:/bin</env-var>
+      <env-var>GROUP=${group}</env-var>
+      <env-var>USER=${user_name}</env-var>
+      <env-var>HDFS_BASE_DIR=${hdfsBaseDir}</env-var>
+      <env-var>SPARK_HOME=/usr/hdp/3.1.0.0-78/spark2</env-var>
+      <env-var>SPARK_SUBMIT_CMD=${sparkSubmitCmd}</env-var>
+      <env-var>PYSPARK_PYTHON=${pysparkPython}</env-var>
+      <env-var>PYSPARK_DRIVER_PYTHON=${pysparkDriverPython}</env-var>
+      <archive>${projectArchive}</archive>
+    </shell>
+    <ok to="build_hybrid_table"/>
+    <error to="kill"/>
+  </action>
+
+  <action name="build_hybrid_table">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <exec>bash</exec>
+      <argument>project/scripts/run_spark_step_hdfs.sh</argument>
+      <argument>src/build_hybrid_table.py</argument>
+      <env-var>PATH=/usr/hdp/current/spark2-client/bin:/usr/hdp/3.1.0.0-78/spark2/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/3.1.0.0-78/hadoop/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/3.1.0.0-78/hive/bin:/usr/bin:/bin</env-var>
+      <env-var>GROUP=${group}</env-var>
+      <env-var>USER=${user_name}</env-var>
+      <env-var>HDFS_BASE_DIR=${hdfsBaseDir}</env-var>
+      <env-var>SPARK_HOME=/usr/hdp/3.1.0.0-78/spark2</env-var>
+      <env-var>SPARK_SUBMIT_CMD=${sparkSubmitCmd}</env-var>
+      <env-var>PYSPARK_PYTHON=${pysparkPython}</env-var>
+      <env-var>PYSPARK_DRIVER_PYTHON=${pysparkDriverPython}</env-var>
+      <archive>${projectArchive}</archive>
+    </shell>
+    <ok to="build_analytics"/>
+    <error to="kill"/>
+  </action>
+
+  <action name="build_analytics">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <exec>bash</exec>
+      <argument>project/scripts/run_spark_step_hdfs.sh</argument>
+      <argument>src/build_analytics.py</argument>
+      <env-var>PATH=/usr/hdp/current/spark2-client/bin:/usr/hdp/3.1.0.0-78/spark2/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/3.1.0.0-78/hadoop/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/3.1.0.0-78/hive/bin:/usr/bin:/bin</env-var>
+      <env-var>GROUP=${group}</env-var>
+      <env-var>USER=${user_name}</env-var>
+      <env-var>HDFS_BASE_DIR=${hdfsBaseDir}</env-var>
+      <env-var>SPARK_HOME=/usr/hdp/3.1.0.0-78/spark2</env-var>
+      <env-var>SPARK_SUBMIT_CMD=${sparkSubmitCmd}</env-var>
+      <env-var>PYSPARK_PYTHON=${pysparkPython}</env-var>
+      <env-var>PYSPARK_DRIVER_PYTHON=${pysparkDriverPython}</env-var>
+      <archive>${projectArchive}</archive>
+    </shell>
+    <ok to="publish_hive"/>
+    <error to="kill"/>
+  </action>
+
+  <action name="publish_hive">
+    <shell xmlns="uri:oozie:shell-action:0.3">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <configuration>
+        <property>
+          <name>mapred.job.queue.name</name>
+          <value>${queueName}</value>
+        </property>
+        <property>
+          <name>mapreduce.job.queuename</name>
+          <value>${queueName}</value>
+        </property>
+      </configuration>
+      <exec>bash</exec>
+      <argument>project/scripts/run_hive_tables.sh</argument>
+      <env-var>PATH=/usr/hdp/current/spark2-client/bin:/usr/hdp/3.1.0.0-78/spark2/bin:/usr/hdp/current/hadoop-client/bin:/usr/hdp/3.1.0.0-78/hadoop/bin:/usr/hdp/current/hive-client/bin:/usr/hdp/3.1.0.0-78/hive/bin:/usr/bin:/bin</env-var>
+      <env-var>GROUP=${group}</env-var>
+      <env-var>USER=${user_name}</env-var>
+      <env-var>HDFS_BASE_DIR=${hdfsBaseDir}</env-var>
+      <env-var>HIVE_GROUP_NAME=${hiveGroupName}</env-var>
+      <env-var>HIVE_USER_NAME=${hiveUserName}</env-var>
+      <env-var>HIVE_USERNAME=${hiveUsername}</env-var>
+      <env-var>HIVE_CMD=${hiveCmd}</env-var>
+      <env-var>HIVE_JDBC_URL=${hiveJdbcUrl}</env-var>
+      <archive>${projectArchive}</archive>
+    </shell>
+    <ok to="end"/>
+    <error to="kill"/>
+  </action>
+
+  <kill name="kill">
+    <message>Workflow failed at ${wf:lastErrorNode()}: ${wf:errorMessage(wf:lastErrorNode())}</message>
+  </kill>
+
+  <end name="end"/>
+</workflow-app>
