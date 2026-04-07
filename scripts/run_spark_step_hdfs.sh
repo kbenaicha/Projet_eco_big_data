@@ -18,16 +18,22 @@ if [ ! -f "${STEP_SCRIPT}" ]; then
   exit 1
 fi
 
-if [ -n "${GROUP:-}" ]; then
-  DEFAULT_HDFS_BASE_DIR="/education/${GROUP}/${USER}/project"
+USER_NAME="${USER:-$(id -un 2>/dev/null || printf 'user')}"
+GROUP_NAME="${GROUP:-$(id -gn 2>/dev/null || printf '')}"
+export USER="${USER_NAME}"
+if [ -n "${GROUP_NAME}" ]; then
+  export GROUP="${GROUP_NAME}"
+  DEFAULT_HDFS_BASE_DIR="/education/${GROUP_NAME}/${USER_NAME}/project"
 else
-  DEFAULT_HDFS_BASE_DIR="/user/${USER}/project"
+  DEFAULT_HDFS_BASE_DIR="/user/${USER_NAME}/project"
 fi
 
 HDFS_BASE_DIR="${HDFS_BASE_DIR:-${DEFAULT_HDFS_BASE_DIR}}"
 SPARK_SUBMIT_CMD="${SPARK_SUBMIT_CMD:-spark-submit}"
 PYSPARK_PYTHON_BIN="${PYSPARK_PYTHON:-python3}"
 PYSPARK_DRIVER_PYTHON_BIN="${PYSPARK_DRIVER_PYTHON:-${PYSPARK_PYTHON_BIN}}"
+SPARK_SUBMIT_MASTER="${SPARK_SUBMIT_MASTER:-yarn}"
+SPARK_SUBMIT_DEPLOY_MODE="${SPARK_SUBMIT_DEPLOY_MODE:-client}"
 
 resolve_command() {
   local preferred="$1"
@@ -54,14 +60,22 @@ resolve_command() {
   return 1
 }
 
-if ! PYSPARK_PYTHON_RESOLVED="$(resolve_command "${PYSPARK_PYTHON_BIN}" /usr/bin/python3 /bin/python3)"; then
-  echo "Interpreteur Python introuvable: ${PYSPARK_PYTHON_BIN}" >&2
-  exit 1
+PYSPARK_PYTHON_RESOLVED=""
+if ! PYSPARK_PYTHON_RESOLVED="$(resolve_command "${PYSPARK_PYTHON_BIN}" \
+  /usr/bin/python3 /bin/python3 /usr/bin/python /bin/python)"; then
+  echo "Interpreteur Python non resolu (${PYSPARK_PYTHON_BIN}), utilisation du Python par defaut de Spark."
+  PYSPARK_PYTHON_RESOLVED=""
 fi
 
-if ! PYSPARK_DRIVER_PYTHON_RESOLVED="$(resolve_command "${PYSPARK_DRIVER_PYTHON_BIN}" /usr/bin/python3 /bin/python3)"; then
-  echo "Interpreteur Python driver introuvable: ${PYSPARK_DRIVER_PYTHON_BIN}" >&2
-  exit 1
+PYSPARK_DRIVER_PYTHON_RESOLVED="${PYSPARK_PYTHON_RESOLVED}"
+if ! PYSPARK_DRIVER_PYTHON_RESOLVED="$(resolve_command "${PYSPARK_DRIVER_PYTHON_BIN}" \
+  /usr/bin/python3 /bin/python3 /usr/bin/python /bin/python)"; then
+  if [ -n "${PYSPARK_PYTHON_RESOLVED}" ]; then
+    PYSPARK_DRIVER_PYTHON_RESOLVED="${PYSPARK_PYTHON_RESOLVED}"
+  else
+    echo "Interpreteur Python driver non resolu (${PYSPARK_DRIVER_PYTHON_BIN}), utilisation du Python par defaut de Spark."
+    PYSPARK_DRIVER_PYTHON_RESOLVED=""
+  fi
 fi
 
 HADOOP_CONF_DIR="${HADOOP_CONF_DIR:-/etc/hadoop/conf}"
@@ -101,16 +115,58 @@ fi
 
 echo "Execution Spark step=${STEP_SCRIPT} base=${HDFS_BASE_DIR}"
 echo "Commande spark-submit=${SPARK_SUBMIT_BIN}"
-echo "Python Spark driver=${PYSPARK_DRIVER_PYTHON_RESOLVED} executors=${PYSPARK_PYTHON_RESOLVED}"
+echo "Spark master=${SPARK_SUBMIT_MASTER} deploy_mode=${SPARK_SUBMIT_DEPLOY_MODE}"
+echo "Python Spark driver=${PYSPARK_DRIVER_PYTHON_RESOLVED:-cluster-default} executors=${PYSPARK_PYTHON_RESOLVED:-cluster-default}"
 echo "HADOOP_CONF_DIR=${HADOOP_CONF_DIR}"
 echo "YARN_CONF_DIR=${YARN_CONF_DIR}"
 echo "SPARK_CONF_DIR=${SPARK_CONF_DIR}"
 echo "SPARK_HOME=${SPARK_HOME}"
 
-PYSPARK_PYTHON="${PYSPARK_PYTHON_RESOLVED}" \
-PYSPARK_DRIVER_PYTHON="${PYSPARK_DRIVER_PYTHON_RESOLVED}" \
-HADOOP_CONF_DIR="${HADOOP_CONF_DIR}" \
-YARN_CONF_DIR="${YARN_CONF_DIR}" \
-SPARK_CONF_DIR="${SPARK_CONF_DIR}" \
-SPARK_HOME="${SPARK_HOME}" \
-STORAGE_MODE=hdfs HDFS_BASE_DIR="${HDFS_BASE_DIR}" "${SPARK_SUBMIT_BIN}" "${STEP_SCRIPT}"
+ENV_VARS=(
+  "HADOOP_CONF_DIR=${HADOOP_CONF_DIR}"
+  "YARN_CONF_DIR=${YARN_CONF_DIR}"
+  "SPARK_CONF_DIR=${SPARK_CONF_DIR}"
+  "SPARK_HOME=${SPARK_HOME}"
+  "STORAGE_MODE=hdfs"
+  "HDFS_BASE_DIR=${HDFS_BASE_DIR}"
+)
+
+if [ -n "${PYSPARK_PYTHON_RESOLVED}" ]; then
+  ENV_VARS+=("PYSPARK_PYTHON=${PYSPARK_PYTHON_RESOLVED}")
+fi
+
+if [ -n "${PYSPARK_DRIVER_PYTHON_RESOLVED}" ]; then
+  ENV_VARS+=("PYSPARK_DRIVER_PYTHON=${PYSPARK_DRIVER_PYTHON_RESOLVED}")
+fi
+
+SPARK_ARGS=(
+  "--master" "${SPARK_SUBMIT_MASTER}"
+  "--deploy-mode" "${SPARK_SUBMIT_DEPLOY_MODE}"
+  "--conf" "spark.yarn.appMasterEnv.STORAGE_MODE=hdfs"
+  "--conf" "spark.executorEnv.STORAGE_MODE=hdfs"
+  "--conf" "spark.yarn.appMasterEnv.HDFS_BASE_DIR=${HDFS_BASE_DIR}"
+  "--conf" "spark.executorEnv.HDFS_BASE_DIR=${HDFS_BASE_DIR}"
+)
+
+if [ -n "${GROUP_NAME}" ]; then
+  SPARK_ARGS+=("--conf" "spark.yarn.appMasterEnv.GROUP=${GROUP_NAME}")
+  SPARK_ARGS+=("--conf" "spark.executorEnv.GROUP=${GROUP_NAME}")
+fi
+
+if [ -n "${USER_NAME}" ]; then
+  SPARK_ARGS+=("--conf" "spark.yarn.appMasterEnv.USER=${USER_NAME}")
+  SPARK_ARGS+=("--conf" "spark.executorEnv.USER=${USER_NAME}")
+fi
+
+if [ -n "${PYSPARK_PYTHON_RESOLVED}" ]; then
+  SPARK_ARGS+=("--conf" "spark.pyspark.python=${PYSPARK_PYTHON_RESOLVED}")
+  SPARK_ARGS+=("--conf" "spark.yarn.appMasterEnv.PYSPARK_PYTHON=${PYSPARK_PYTHON_RESOLVED}")
+  SPARK_ARGS+=("--conf" "spark.executorEnv.PYSPARK_PYTHON=${PYSPARK_PYTHON_RESOLVED}")
+fi
+
+if [ -n "${PYSPARK_DRIVER_PYTHON_RESOLVED}" ]; then
+  SPARK_ARGS+=("--conf" "spark.pyspark.driver.python=${PYSPARK_DRIVER_PYTHON_RESOLVED}")
+  SPARK_ARGS+=("--conf" "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON=${PYSPARK_DRIVER_PYTHON_RESOLVED}")
+fi
+
+env "${ENV_VARS[@]}" "${SPARK_SUBMIT_BIN}" "${SPARK_ARGS[@]}" "${STEP_SCRIPT}"

@@ -1,0 +1,2 @@
+total_observations,distinct_lines,distinct_stops,delayed_observations,disrupted_observations,cancelled_observations,network_avg_delay_minutes,delay_rate_pct,disruption_rate_pct,cancellation_rate_pct
+373,23,8,0,3,2,0.03,0.0,0.8,0.54

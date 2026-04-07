@@ -7,10 +7,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
-if [ -n "${GROUP:-}" ]; then
-  DEFAULT_HDFS_BASE_DIR="/education/${GROUP}/${USER}/project/raw"
+USER_NAME="${USER:-$(id -un 2>/dev/null || printf 'user')}"
+GROUP_NAME="${GROUP:-$(id -gn 2>/dev/null || printf '')}"
+export USER="${USER_NAME}"
+if [ -n "${GROUP_NAME}" ]; then
+  export GROUP="${GROUP_NAME}"
+  DEFAULT_HDFS_BASE_DIR="/education/${GROUP_NAME}/${USER_NAME}/project/raw"
 else
-  DEFAULT_HDFS_BASE_DIR="/user/${USER}/project/raw"
+  DEFAULT_HDFS_BASE_DIR="/user/${USER_NAME}/project/raw"
 fi
 
 HDFS_BASE_DIR="${HDFS_BASE_DIR:-${DEFAULT_HDFS_BASE_DIR}}"

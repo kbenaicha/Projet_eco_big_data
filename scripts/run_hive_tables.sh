@@ -7,17 +7,21 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
-if [ -n "${GROUP:-}" ]; then
-  DEFAULT_HDFS_BASE_DIR="/education/${GROUP}/${USER}/project"
+USER_NAME="${USER:-$(id -un 2>/dev/null || printf 'user')}"
+GROUP_NAME="${GROUP:-$(id -gn 2>/dev/null || printf '')}"
+export USER="${USER_NAME}"
+if [ -n "${GROUP_NAME}" ]; then
+  export GROUP="${GROUP_NAME}"
+  DEFAULT_HDFS_BASE_DIR="/education/${GROUP_NAME}/${USER_NAME}/project"
 else
-  DEFAULT_HDFS_BASE_DIR="/user/${USER}/project"
+  DEFAULT_HDFS_BASE_DIR="/user/${USER_NAME}/project"
 fi
 
 HDFS_BASE_DIR="${HDFS_BASE_DIR:-${DEFAULT_HDFS_BASE_DIR}}"
 HIVE_CMD="${HIVE_CMD:-beeline}"
 HIVE_JDBC_URL="${HIVE_JDBC_URL:-}"
-HIVE_USER_NAME="${HIVE_USER_NAME:-${USER:-user}}"
-HIVE_GROUP_NAME="${HIVE_GROUP_NAME:-${GROUP:-default}}"
+HIVE_USER_NAME="${HIVE_USER_NAME:-${USER_NAME}}"
+HIVE_GROUP_NAME="${HIVE_GROUP_NAME:-${GROUP_NAME:-default}}"
 DEFAULT_HIVE_USERNAME="$(printf '%s' "${HIVE_USER_NAME}_transport" | tr '.-' '__')"
 HIVE_USERNAME="${HIVE_USERNAME:-${DEFAULT_HIVE_USERNAME}}"
 
