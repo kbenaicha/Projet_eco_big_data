@@ -7,8 +7,15 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
 DEFAULT_PYTHON="python"
+
+# Cas Linux / Mac
 if [ -x ".venv/bin/python" ]; then
   DEFAULT_PYTHON=".venv/bin/python"
+fi
+
+# Cas Windows
+if [ -x ".venv/Scripts/python.exe" ]; then
+  DEFAULT_PYTHON=".venv/Scripts/python.exe"
 fi
 
 PYTHON_CMD="${PYTHON_CMD:-${DEFAULT_PYTHON}}"
