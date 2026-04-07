@@ -45,4 +45,8 @@ PYSPARK_PYTHON="${PYSPARK_PYTHON_BIN}" \
 PYSPARK_DRIVER_PYTHON="${PYSPARK_DRIVER_PYTHON_BIN}" \
 "${PYTHON_CMD}" src/build_analytics.py
 
+PYSPARK_PYTHON="${PYSPARK_PYTHON_BIN}" \
+PYSPARK_DRIVER_PYTHON="${PYSPARK_DRIVER_PYTHON_BIN}" \
+"${PYTHON_CMD}" src/build_results_report.py
+
 echo "Pipeline locale terminee."

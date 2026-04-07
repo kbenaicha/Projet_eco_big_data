@@ -1,0 +1,4 @@
+line_code,stop_point_name,expected_departure_time,delay_minutes,disruption_reason
+C01729,La Défense,2026-03-25T15:31:10.000Z,1.33,cancelled_service
+C00754,La Défense - Terminal Jules Verne,2026-03-25T16:20:00.000Z,0.0,missing_realtime_status
+C01729,La Défense,2026-03-25T15:59:20.000Z,0.0,cancelled_service

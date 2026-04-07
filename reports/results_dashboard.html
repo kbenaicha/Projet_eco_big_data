@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard Resultats Transport</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+    h1, h2 {
+      margin: 0 0 14px;
+    }
+    p, li {
+      line-height: 1.5;
+    }
+    .hero {
+      background: #16324f;
+      color: white;
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #d9e2ec;
+    }
+    .card-label {
+      font-size: 12px;
+      color: #52606d;
+      margin-bottom: 6px;
+    }
+    .card-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: #102a43;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #d9e2ec;
+    }
+    .section-note {
+      color: #52606d;
+      margin: 0 0 14px;
+    }
+    .highlights {
+      margin: 0;
+      padding-left: 18px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 6px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    th {
+      color: #52606d;
+      font-weight: 600;
+    }
+    .footer {
+      color: #52606d;
+      font-size: 14px;
+    }
+    .footer code {
+      background: #eef2f7;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Dashboard de resultats</h1>
+      <p>Lecture simple des resultats du projet : etat global du reseau, lignes et arrets sensibles, motifs de perturbation et exemples concrets.</p>
+    </section>
+
+    <section class="cards">
+      <div class="card"><div class="card-label">Observations analysees</div><div class="card-value">373</div></div>
+      <div class="card"><div class="card-label">Lignes observees</div><div class="card-value">23</div></div>
+      <div class="card"><div class="card-label">Arrets observes</div><div class="card-value">8</div></div>
+      <div class="card"><div class="card-label">Retard moyen</div><div class="card-value">0,03 min</div></div>
+      <div class="card"><div class="card-label">Taux de perturbation</div><div class="card-value">0,80 %</div></div>
+      <div class="card"><div class="card-label">Taux d'annulation</div><div class="card-value">0,54 %</div></div>
+    </section>
+
+    <section class="panel" style="margin-bottom: 20px;">
+      <h2>Resume en 30 secondes</h2>
+      <p class="section-note">Bloc a montrer en premier dans une presentation ou dans le rendu ecrit.</p>
+      <ul class="highlights">
+        <li>Le jeu de donnees couvre 23 lignes et 8 arrets.</li>
+        <li>373 observations ont ete analysees sur le reseau.</li>
+        <li>0,80 % des observations sont perturbees et 0,54 % sont annulees.</li>
+        <li>L'arret le plus sensible dans cet echantillon est La Défense.</li>
+        <li>Le motif principal de perturbation est le service annule.</li>
+      </ul>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>1. Ou observe-t-on les perturbations ?</h2>
+        <p class="section-note">Lecture graphique rapide des lignes les plus touchees.</p>
+        <img src="assets/top_lines.svg" alt="Top lignes perturbees">
+      </div>
+      <div class="panel">
+        <h2>2. Quels arrets sont les plus sensibles ?</h2>
+        <p class="section-note">Les arrets avec le plus de perturbations dans l'echantillon.</p>
+        <img src="assets/top_stops.svg" alt="Top arrets sensibles">
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>3. Pourquoi les trajets sont perturbes ?</h2>
+        <p class="section-note">Les causes les plus frequentes observees dans les donnees.</p>
+        <img src="assets/disruption_reasons.svg" alt="Motifs de perturbation">
+      </div>
+      <div class="panel">
+        <h2>Top lignes</h2>
+        <p class="section-note">Tableau simple a reprendre dans le rapport.</p>
+        <table>
+          <thead>
+            <tr><th>Ligne</th><th>Observations</th><th>Retard moyen</th><th>Perturbation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>C01742 (A)</td><td>128</td><td>-0,03 min</td><td>0,00 %</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Top arrets</h2>
+        <p class="section-note">Les arrets a surveiller en priorite.</p>
+        <table>
+          <thead>
+            <tr><th>Arret</th><th>Observations</th><th>Retard moyen</th><th>Perturbation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>La Défense</td><td>286</td><td>0,00 min</td><td>0,70 %</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Motifs de perturbation</h2>
+        <p class="section-note">Version tabulaire des causes principales.</p>
+        <table>
+          <thead>
+            <tr><th>Motif</th><th>Evenements</th><th>Part</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Service annule</td><td>2</td><td>66,67 %</td></tr>
+            <tr><td>Statut temps reel manquant</td><td>1</td><td>33,33 %</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Exemples concrets</h2>
+      <p class="section-note">Quelques observations reelles pour montrer comment les perturbations apparaissent dans les donnees.</p>
+      <table>
+        <thead>
+          <tr><th>Ligne</th><th>Arret</th><th>Depart prevu</th><th>Retard</th><th>Motif</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>C01729</td><td>La Défense</td><td>2026-03-25T15:31:10.000Z</td><td>1,33 min</td><td>Service annule</td></tr>
+          <tr><td>C00754</td><td>La Défense - Terminal Jules Verne</td><td>2026-03-25T16:20:00.000Z</td><td>0,00 min</td><td>Statut temps reel manquant</td></tr>
+          <tr><td>C01729</td><td>La Défense</td><td>2026-03-25T15:59:20.000Z</td><td>0,00 min</td><td>Service annule</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel footer" style="margin-top: 20px;">
+      <h2>Fichiers utiles</h2>
+      <p>Resume texte : <code>reports/results_summary.md</code></p>
+      <p>Exports CSV : <code>reports/exports/</code></p>
+      <p>Graphiques : <code>reports/assets/</code></p>
+    </section>
+  </div>
+</body>
+</html>
